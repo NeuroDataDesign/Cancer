@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 import tree_metrics
 from print_importance import might_importance
 
-n_estimators = 100000
+n_estimators = 1000
 max_features = 0.3
 
 MODEL_NAMES = {
@@ -64,7 +64,8 @@ might_kwargs = MODEL_NAMES["might"]
 
 
 # get the sample list
-sample_list_file = "ManuscriptFeatureMatrices/AllSamples.MIGHT.Passed.samples.txt"
+# Savannah: Change the file dir if you need, I just put the file in the same dir
+sample_list_file = "AllSamples.MIGHT.Passed.samples.txt"
 sample_list = pd.read_csv(sample_list_file, sep=" ", header=None)
 sample_list.columns = ["library", "sample_id", "cohort"]
 sample_list.head()
@@ -79,8 +80,8 @@ sample_list["cohort"].unique()
 
 
 # define a function to get X and y given a file
-
-def get_X_y(f, root="ManuscriptFeatureMatrices/", cohort=cohort1, verbose=False):
+# Savannah: root is the directory where the file is located
+def get_X_y(f, root="", cohort=cohort1, verbose=False):
     df = pd.read_csv(root + f)
     non_features = ['Run', 'Library', 'Cancer Status', 'Tumor type', 'Stage', 'Library volume (uL)', 'Library Volume',
                     'UIDs Used', 'Experiment', 'P7', 'P7 Primer', 'MAF']
@@ -218,6 +219,7 @@ def run_alog(f1, cohort=cohort1, model_name='might'):
 
     # metrics
     S98 = np.max(tpr[fpr <= 0.02])
+    
     tree_metrics.plot_S98(S98, fpr, tpr, model_name)
 
     MI = tree_metrics.Calculate_MI(model_name, y_1, POS)

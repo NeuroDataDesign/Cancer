@@ -1,0 +1,13 @@
+# Ignore all .pyc files
+__pycache__/
+*.pyc
+
+# Ignore all .npz files
+*.npz
+
+# Ignore all output files
+figures/
+
+# Origrnal data
+AllSamples.MIGHT.Passed.samples.txt
+WiseCondorX.Wise-1.csv
