@@ -11,3 +11,7 @@ figures/
 # Origrnal data
 AllSamples.MIGHT.Passed.samples.txt
 WiseCondorX.Wise-1.csv
+
+# Ignore log files
+logs/
+*.log
