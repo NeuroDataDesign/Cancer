@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import matplotlib.patches as mpatches
 
 # Obtain the list of samples
 sample_list_file = "AllSamples.MIGHT.Passed.samples.txt"
@@ -66,15 +67,24 @@ melted_data = pd.melt(combined_data.reset_index(), id_vars=['Sample', 'Type'],
                       var_name='Genomic Region', value_name='Value')
 
 # Plot using hue to differentiate between cancer and normal samples
-plt.figure(1, figsize=(15, 9))
-sns.stripplot(data=melted_data, x='Value', y='Genomic Region', hue='Type', 
-              jitter=True, size=3, marker="o", alpha=0.8, palette={"Cancer": "blue", "Normal": "red"})
-plt.yticks([])
-plt.title('Genomic Regions Data Distribution')
-plt.xlabel('Genomic Regions Values')
-plt.ylabel('Genomic Regions')
-plt.legend(title='Sample Type', loc='upper right')
-plt.show()
+# plt.figure(1, figsize=(15, 9))
+
+# sns.stripplot(data=melted_data[melted_data['Type'] == 'Cancer'], x='Value', y='Genomic Region', 
+#               jitter=True, size=5, marker="o", alpha=0.5, color="blue")
+
+# sns.stripplot(data=melted_data[melted_data['Type'] == 'Normal'], x='Value', y='Genomic Region', 
+#               jitter=True, size=5, marker="o", alpha=0.8, color="red")
+
+# blue_dot = plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='blue', markersize=6, label='Cancer', alpha=0.5)
+# red_dot = plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=6, label='Normal', alpha=0.8)
+
+# plt.legend(handles=[blue_dot, red_dot], title='Sample Type', loc='upper right')
+
+# plt.yticks([])
+# plt.title('Genomic Regions Data Distribution', fontsize=18)
+# plt.xlabel('Genomic Regions Values', fontsize=18)
+# plt.ylabel('Genomic Regions', fontsize=18)
+# plt.show()
 
 ## Plot for Stage IV and Stage I
 
@@ -88,18 +98,21 @@ stage_i_numeric = stage_i_numeric.apply(pd.to_numeric, errors='coerce').fillna(0
 
 plt.figure(2, figsize=(15, 9))
 # sns.boxplot(data=stage_iv_numeric, orient='h', palette="coolwarm")
-sns.stripplot(data=stage_iv_numeric, orient='h', color="blue", jitter=True, size=3, marker=".", alpha=0.7)
+plt.subplot(2, 1, 1)
+plt.xlim(-40, 110)
+sns.stripplot(data=stage_iv_numeric, orient='h', color="blue", jitter=True, size=5, marker="o", alpha=0.5)
 plt.yticks([])
-plt.title('Boxplot of Genomic Regions for Stage IV')
-plt.xlabel('Genomic Regions Values')
-plt.ylabel('Genomic Regions')
-plt.show()
-
-plt.figure(3, figsize=(15, 9))
+plt.title('Boxplot of Genomic Regions for Stage IV', fontsize=18)
+# plt.xlabel('Genomic Regions Values', fontsize=18)
+plt.ylabel('Genomic Regions', fontsize=18)
+# plt.show()
+plt.subplot(2, 1, 2)
+# plt.figure(3, figsize=(15, 9))
 # sns.boxplot(data=stage_i_numeric, orient='h', palette="coolwarm")
-sns.stripplot(data=stage_i_numeric, orient='h', color="blue", jitter=True, size=3, marker=".", alpha=0.7)
+plt.xlim(-40, 110)
+sns.stripplot(data=stage_i_numeric, orient='h', color="blue", jitter=True, size=5, marker="o", alpha=0.5)
 plt.yticks([])
-plt.title('Boxplot of Genomic Regions for Stage I')
-plt.xlabel('Genomic Regions Values')
-plt.ylabel('Genomic Regions')
+plt.title('Boxplot of Genomic Regions for Stage I', fontsize=18)
+plt.xlabel('Genomic Regions Values', fontsize=18)
+plt.ylabel('Genomic Regions', fontsize=18)
 plt.show()
