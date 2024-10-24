@@ -67,24 +67,24 @@ melted_data = pd.melt(combined_data.reset_index(), id_vars=['Sample', 'Type'],
                       var_name='Genomic Region', value_name='Value')
 
 # Plot using hue to differentiate between cancer and normal samples
-# plt.figure(1, figsize=(15, 9))
+plt.figure(1, figsize=(15, 9))
 
-# sns.stripplot(data=melted_data[melted_data['Type'] == 'Cancer'], x='Value', y='Genomic Region', 
-#               jitter=True, size=5, marker="o", alpha=0.5, color="blue")
+sns.stripplot(data=melted_data[melted_data['Type'] == 'Cancer'], x='Value', y='Genomic Region', 
+              jitter=True, size=5, marker="o", alpha=0.5, color="blue")
 
-# sns.stripplot(data=melted_data[melted_data['Type'] == 'Normal'], x='Value', y='Genomic Region', 
-#               jitter=True, size=5, marker="o", alpha=0.8, color="red")
+sns.stripplot(data=melted_data[melted_data['Type'] == 'Normal'], x='Value', y='Genomic Region', 
+              jitter=True, size=5, marker="o", alpha=0.8, color="red")
 
-# blue_dot = plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='blue', markersize=6, label='Cancer', alpha=0.5)
-# red_dot = plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=6, label='Normal', alpha=0.8)
+blue_dot = plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='blue', markersize=6, label='Cancer', alpha=0.5)
+red_dot = plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=6, label='Normal', alpha=0.8)
 
-# plt.legend(handles=[blue_dot, red_dot], title='Sample Type', loc='upper right')
+plt.legend(handles=[blue_dot, red_dot], title='Sample Type', loc='upper right')
 
-# plt.yticks([])
-# plt.title('Genomic Regions Data Distribution', fontsize=18)
-# plt.xlabel('Genomic Regions Values', fontsize=18)
-# plt.ylabel('Genomic Regions', fontsize=18)
-# plt.show()
+plt.yticks([])
+plt.title('Genomic Regions Data Distribution', fontsize=18)
+plt.xlabel('Genomic Regions Values', fontsize=18)
+plt.ylabel('Genomic Regions', fontsize=18)
+plt.show()
 
 ## Plot for Stage IV and Stage I
 
@@ -102,7 +102,7 @@ plt.subplot(2, 1, 1)
 plt.xlim(-40, 110)
 sns.stripplot(data=stage_iv_numeric, orient='h', color="blue", jitter=True, size=5, marker="o", alpha=0.5)
 plt.yticks([])
-plt.title('Boxplot of Genomic Regions for Stage IV', fontsize=18)
+plt.title('Plot of Genomic Regions for Stage IV', fontsize=18)
 # plt.xlabel('Genomic Regions Values', fontsize=18)
 plt.ylabel('Genomic Regions', fontsize=18)
 # plt.show()
@@ -112,7 +112,7 @@ plt.subplot(2, 1, 2)
 plt.xlim(-40, 110)
 sns.stripplot(data=stage_i_numeric, orient='h', color="blue", jitter=True, size=5, marker="o", alpha=0.5)
 plt.yticks([])
-plt.title('Boxplot of Genomic Regions for Stage I', fontsize=18)
+plt.title('Plot of Genomic Regions for Stage I', fontsize=18)
 plt.xlabel('Genomic Regions Values', fontsize=18)
 plt.ylabel('Genomic Regions', fontsize=18)
 plt.show()
