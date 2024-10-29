@@ -18,6 +18,7 @@ print(len(Normal_samples))
 # Read the data
 data = pd.read_csv("WiseCondorX.Wise-1.csv", low_memory=False)
 
+# unique_tumor = data['Tumor type'].unique()
 unique_tumor = data['Tumor type'].unique()
 print("Tumor type:", unique_tumor)
 
@@ -68,22 +69,22 @@ for tumor, df in tumor_types.items():
     tumor_types[tumor] = df.apply(pd.to_numeric, errors='coerce').fillna(0)
 
 # 为每种肿瘤类型单独绘制 boxplot 并叠加 stripplot
-# for tumor, df in tumor_types.items():
-#     plt.figure(figsize=(15, 10))
+for tumor, df in tumor_types.items():
+    plt.figure(figsize=(15, 10))
     
-#     # 绘制 boxplot
-#     sns.boxplot(data=df, orient='h', color="lightblue", fliersize=2, linewidth=1.5,
-#                 boxprops=dict(facecolor="lightblue", edgecolor="blue", linewidth=2),
-#                 whiskerprops=dict(color="blue", linewidth=2),
-#                 capprops=dict(color="blue", linewidth=2))
+    # 绘制 boxplot
+    sns.boxplot(data=df, orient='h', color="lightblue", fliersize=2, linewidth=1.5,
+                boxprops=dict(facecolor="lightblue", edgecolor="blue", linewidth=2),
+                whiskerprops=dict(color="blue", linewidth=2),
+                capprops=dict(color="blue", linewidth=2))
     
-#     # 在 boxplot 上叠加 stripplot，使用透明度展示数据点的密度
-#     sns.stripplot(data=df, orient='h', color="darkblue", jitter=True, size=2, alpha=0.4)
+    # 在 boxplot 上叠加 stripplot，使用透明度展示数据点的密度
+    sns.stripplot(data=df, orient='h', color="darkblue", jitter=True, size=2, alpha=0.4)
     
-#     plt.title(f'Genomic Regions Data Distribution for {tumor}', fontsize=16)
-#     plt.xlabel('Genomic Regions Values', fontsize=14)
-#     # plt.yticks([])  
-#     plt.show()
+    plt.title(f'Genomic Regions Data Distribution for {tumor}', fontsize=16)
+    plt.xlabel('Genomic Regions Values', fontsize=14)
+    # plt.yticks([])  
+    plt.show()
 
 
 ## Plot for Stage IV and Stage I
