@@ -62,7 +62,8 @@ tumor_types = {
     'Esophagus': data[data['Tumor type'] == 'Esophagus'][genomic_regions],
     'Lung': data[data['Tumor type'] == 'Lung'][genomic_regions],
     'Ovary': data[data['Tumor type'] == 'Ovary'][genomic_regions],
-    'Breast': data[data['Tumor type'] == 'Breast'][genomic_regions]
+    'Breast': data[data['Tumor type'] == 'Breast'][genomic_regions],
+    'Kidney': data[data['Tumor type'] == 'Kidney'][genomic_regions]
 }
 
 for tumor, df in tumor_types.items():
