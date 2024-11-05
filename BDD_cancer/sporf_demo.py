@@ -224,5 +224,5 @@ def run_alog(f1, cohort=cohort1, model_name='might'):
     )
     return S98
 
-Parallel(n_jobs=10)(delayed(run_alog)(f1='WiseCondorX.Wise-1', cohort=cohort1, model_name=modelname)
+Parallel(n_jobs=10)(delayed(run_alog)(f1='WiseCondorX.Wise-1', cohort=cohort2, model_name=modelname)
                         for modelname in ['might','svm','HFODT'])
