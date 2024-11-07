@@ -22,7 +22,7 @@ import os
 
 from print_importance import might_importance
 
-n_estimators = 1000
+n_estimators = 5000
 max_features = 0.3
 
 MODEL_NAMES = {
