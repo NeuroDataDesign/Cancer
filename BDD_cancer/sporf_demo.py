@@ -25,6 +25,8 @@ from print_importance import might_importance
 n_estimators = 5000
 max_features = 0.3
 
+# pd.set_option('future.no_silent_downcasting', True)
+
 MODEL_NAMES = {
     "might": {
         "n_estimators": n_estimators,
@@ -89,8 +91,10 @@ def get_X_y(f, root="", cohort=cohort1, verbose=False):
     target = 'Cancer Status'
     y = df[target]
     # convert the labels to 0 and 1
-    y = y.replace("Healthy", 0)
-    y = y.replace("Cancer", 1)
+    # y = y.replace("Healthy", 0).infer_objects(copy=False)
+    # y = y.replace("Cancer", 1).infer_objects(copy=False)
+    # y = y.replace({"Healthy": 0, "Cancer": 1}).infer_objects(copy=False)
+    y = y.replace({"Healthy": 0, "Cancer": 1}).astype(int)
     # remove the non-feature columns if they exist
     for col in non_features:
         if col in df.columns:
@@ -210,7 +214,13 @@ def run_alog(f1, cohort=cohort1, model_name='might'):
     # might_importance(model_name, est, X_combine)
 
     # save the model
-    output_fname = (f"{model_name}.npz")
+    # 指定保存模型的文件夹
+    output_folder = "projects/Cancer/BDD_cancer/npz"  # 替换为你希望保存模型的文件夹路径
+    os.makedirs(output_folder, exist_ok=True)  # 确保文件夹存在，如果不存在则创建
+
+    # 设置文件名和路径
+    output_fname = os.path.join(output_folder, f"{model_name}.npz")
+
     print(f"Model: {model_name}, File: {f1}, S98: {S98}, MI: {MI}, pAUC: {pAUC}, hd: {hd}")
     np.savez_compressed(
         output_fname,
@@ -224,5 +234,5 @@ def run_alog(f1, cohort=cohort1, model_name='might'):
     )
     return S98
 
-Parallel(n_jobs=10)(delayed(run_alog)(f1='WiseCondorX.Wise-1', cohort=cohort2, model_name=modelname)
+Parallel(n_jobs=40)(delayed(run_alog)(f1='WiseCondorX.Wise-1', cohort=cohort2, model_name=modelname)
                         for modelname in ['might','svm','HFODT'])
