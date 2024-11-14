@@ -30,7 +30,7 @@ max_features = 0.3
 MODEL_NAMES = {
     "might": {
         "n_estimators": n_estimators,
-        "honest_fraction": 0.5,
+        "honest_fraction": 0.6,
         "n_jobs": 40,
         "bootstrap": True,
         "stratify": True,
@@ -40,7 +40,7 @@ MODEL_NAMES = {
     },
     "HFODT": {
         "n_estimators": n_estimators,
-        "honest_fraction": 0.5,
+        "honest_fraction": 0.7,
         "n_jobs": 40,
         "bootstrap": True,
         "stratify": True,
@@ -222,6 +222,7 @@ def run_alog(f1, cohort=cohort1, model_name='might'):
     output_fname = os.path.join(output_folder, f"{model_name}.npz")
 
     print(f"Model: {model_name}, File: {f1}, S98: {S98}, MI: {MI}, pAUC: {pAUC}, hd: {hd}")
+    # print(f"Model: {model_name}, File: {f1}, S98: {S98}")
     np.savez_compressed(
         output_fname,
         model_name=model_name,
@@ -234,5 +235,6 @@ def run_alog(f1, cohort=cohort1, model_name='might'):
     )
     return S98
 
-Parallel(n_jobs=40)(delayed(run_alog)(f1='WiseCondorX.Wise-1', cohort=cohort2, model_name=modelname)
+for i in range(10):
+    Parallel(n_jobs=40)(delayed(run_alog)(f1='WiseCondorX.Wise-1', cohort=cohort2, model_name=modelname)
                         for modelname in ['might','svm','HFODT'])
