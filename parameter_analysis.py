@@ -1,10 +1,10 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-file_path = "Cancer_HF.csv"  #
+file_path = "Cancer_Max_features.csv"  #
 data = pd.read_csv(file_path)
 
-grouped = data.groupby("Honest_Fraction").agg(['mean', 'std'])
+grouped = data.groupby("features_number").agg(['mean', 'std'])
 
 methods = ["SVM", "MIGHT", "SPO-MIGHT"]
 colors = ["blue", "red", "green"]
@@ -21,7 +21,7 @@ for method, color, marker in zip(methods, colors, markers):
 
 
 plt.title("Performance of SVM, MIGHT, SPO-MIGHT", fontsize=14)
-plt.xlabel("Honest Fraction", fontsize=12)
+plt.xlabel("MAX Features", fontsize=12)
 plt.ylabel("s@98", fontsize=12)
 plt.xticks(grouped.index, fontsize=10)
 plt.yticks(fontsize=10)
