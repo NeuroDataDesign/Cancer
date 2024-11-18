@@ -23,19 +23,19 @@ import os
 from print_importance import might_importance
 
 n_estimators = 5000
-max_features = 0.3
+max_features = 0.4
 
 # pd.set_option('future.no_silent_downcasting', True)
 
 MODEL_NAMES = {
     "might": {
         "n_estimators": n_estimators,
-        "honest_fraction": 0.6,
+        "honest_fraction": 0.7,
         "n_jobs": 40,
         "bootstrap": True,
         "stratify": True,
         "max_samples": 1.6,
-        "max_features": 0.3,
+        "max_features": max_features,
         "tree_estimator": MultiViewDecisionTreeClassifier(),
     },
     "HFODT": {
@@ -45,7 +45,7 @@ MODEL_NAMES = {
         "bootstrap": True,
         "stratify": True,
         "max_samples": 1.6,
-        "max_features": 0.3,
+        "max_features": max_features,
         "tree_estimator": ObliqueDecisionTreeClassifier(),
     },
     "svm": {
