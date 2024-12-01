@@ -30,21 +30,21 @@ output_dir = "./figures/visual"
 # Define the output file path
 output_file = os.path.join(output_dir, "cohort_distribution_pie_chart.png")
 
-# # Plot the pie chart
-# plt.figure(figsize=(8, 6))
-# plt.pie(
-#     counts,
-#     labels=labels,
-#     autopct='%1.1f%%',  # Show percentages
-#     startangle=90,  # Rotate to start from top
-#     wedgeprops={"edgecolor": "black"},  # Add borders to the slices
-#     textprops={"fontsize": 16},  # Set the text size
-# )
-# plt.title("Cohort Distribution", fontsize=24)
+# Plot the pie chart
+plt.figure(figsize=(8, 6))
+plt.pie(
+    counts,
+    labels=labels,
+    autopct='%1.1f%%',  # Show percentages
+    startangle=90,  # Rotate to start from top
+    wedgeprops={"edgecolor": "black"},  # Add borders to the slices
+    textprops={"fontsize": 16},  # Set the text size
+)
+plt.title("Cohort Distribution", fontsize=24)
 
-# # Save the figure
-# plt.savefig(output_file, dpi=300)
-# plt.close()  # Close the figure to avoid displaying in interactive environments
+# Save the figure
+plt.savefig(output_file, dpi=300)
+plt.close()  # Close the figure to avoid displaying in interactive environments
 
 # print(f"Pie chart saved at: {output_file}")
 
