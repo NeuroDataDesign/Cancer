@@ -20,12 +20,12 @@ for method, color, marker in zip(methods, colors, markers):
                  marker=marker, capsize=5, linestyle='-', linewidth=1)
 
 
-plt.title("Performance of SVM, MIGHT, SPO-MIGHT", fontsize=14)
-plt.xlabel("Honest Fraction", fontsize=12)
-plt.ylabel("s@98", fontsize=12)
-plt.xticks(grouped.index, fontsize=10)
-plt.yticks(fontsize=10)
-plt.legend(fontsize=10)
+# plt.title("Performance of SVM, MIGHT, SPO-MIGHT", fontsize=14)
+# plt.xlabel("MAX Features", fontsize=12)
+# plt.ylabel("s@98", fontsize=12)
+plt.xticks(grouped.index, fontsize=18)
+plt.yticks(fontsize=18)
+plt.legend(fontsize=18)
 plt.grid(True, linestyle='--', alpha=0.7)
 
 # 显示图表
