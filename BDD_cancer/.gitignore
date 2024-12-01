@@ -6,7 +6,6 @@ __pycache__/
 *.npz
 
 # Ignore all output files
-figures/
 BDD/Outcome
 BDD/reference
 
