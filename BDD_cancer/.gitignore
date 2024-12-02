@@ -8,6 +8,7 @@ __pycache__/
 # Ignore all output files
 BDD/Outcome
 BDD/reference
+BDD_cancer/npz
 
 
 # Origrnal data

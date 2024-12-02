@@ -32,7 +32,7 @@ def Calculate_hd(model_name, y_pred_proba) -> float:
 
 
 def plot_S98(S98, fpr, tpr, model_name):
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots()
     fig.tight_layout()
     ax.tick_params(labelsize=15)
     ax.set_xlim([-0.005, 1.005])
@@ -60,7 +60,7 @@ def plot_S98(S98, fpr, tpr, model_name):
 
 
 def Calculate_pAUC(model_name, y_true, y_pred_proba, fpr, tpr, max_fpr=0.1) -> float:
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots()
     fig.tight_layout()
     ax.tick_params(labelsize=15)
     ax.set_xlim([-0.005, 1.005])

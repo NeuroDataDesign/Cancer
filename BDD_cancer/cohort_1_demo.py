@@ -1,4 +1,5 @@
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -26,7 +27,7 @@ import matplotlib.pyplot as plt
 import tree_metrics
 from print_importance import might_importance
 
-n_estimators = 1000
+n_estimators = 5000
 max_features = 0.3
 
 MODEL_NAMES = {
@@ -219,20 +220,17 @@ def run_alog(f1, cohort=cohort1, model_name='might'):
 
     # metrics
     S98 = np.max(tpr[fpr <= 0.02])
-    
-    tree_metrics.plot_S98(S98, fpr, tpr, model_name)
-
+    # tree_metrics.plot_S98(S98, fpr, tpr, model_name)
     MI = tree_metrics.Calculate_MI(model_name, y_1, POS)
-
     pAUC = tree_metrics.Calculate_pAUC(model_name, y_1, POS, fpr, tpr)
-
     hd = tree_metrics.Calculate_hd(model_name, POS)
 
     # importance
-    might_importance(model_name, est, X_combine)
+    # might_importance(model_name, est, X_combine)
 
     # save the model
-    output_fname = (f"{model_name}.npz")
+    output_dir = "./npz"
+    output_fname = os.path.join(output_dir, f"{model_name}.npz")
     print(model_name, f1)
     print(model_name, S98, MI, pAUC, hd)
     np.savez_compressed(
@@ -245,9 +243,53 @@ def run_alog(f1, cohort=cohort1, model_name='might'):
         pAUC=pAUC,
         hd=hd
     )
-    return S98
+    # return S98
+    return {
+        'fpr': fpr,
+        'tpr': tpr,
+        'thresholds': thresholds,
+        'y': y_1,  
+        'POS': POS  
+    }
 
+def plot_all_roc_curves(models, results, save_path="./figures/roc_curves_comparison.png"):
+    plt.figure(figsize=(8, 6))
+    for model_name, result in results.items():
+        fpr, tpr, pAUC = result['fpr'], result['tpr'], result['pAUC']
+        plt.plot(fpr, tpr, label=f'{model_name} (pAUC={pAUC:.3f})')
 
-for i in range(20):
-    Parallel(n_jobs=20)(delayed(run_alog)(f1='WiseCondorX.Wise-1', cohort=cohort1, model_name=modelname)
-                        for modelname in ['might', 'rf', 'knn', 'lr', 'svm'])
+    plt.plot([0, 1], [0, 1], 'k--', lw=1)  
+    # plt.xlim([0.0, 0.02])  
+    # plt.ylim([0.0, 1.0])
+    plt.xlabel('False Positive Rate (FPR)', fontsize=22)
+    plt.ylabel('True Positive Rate (TPR)', fontsize=22)
+    plt.title('ROC Curve Comparison', fontsize=22)
+    plt.legend(loc='lower right', fontsize=20)
+    plt.grid(alpha=0.5)
+    
+    plt.savefig(save_path, dpi=300)
+    print(f"ROC curves saved to {save_path}")
+    plt.show()
+
+################# Run this if you want to plot Roc curve ############################
+# Plot ROC curves for all models, run only once. DON'T need 20 times
+results = {}
+for model_name in ['might', 'rf', 'knn', 'lr', 'svm']:
+    result = run_alog(f1='WiseCondorX.Wise-1', cohort=cohort2, model_name=model_name)
+    fpr = result['fpr']
+    tpr = result['tpr']
+    y_true = result['y']
+    y_pred_proba = result['POS']
+    pAUC = tree_metrics.Calculate_pAUC(model_name, y_true, y_pred_proba, fpr, tpr)
+    results[model_name] = {
+        'fpr': fpr,
+        'tpr': tpr,
+        'pAUC': pAUC
+    }
+
+plot_all_roc_curves(['might', 'rf', 'knn', 'lr', 'svm'], results, save_path="./figures/roc_curves_comparison.png")
+#############################################
+
+# for i in range(20):
+#     Parallel(n_jobs=20)(delayed(run_alog)(f1='WiseCondorX.Wise-1', cohort=cohort1, model_name=modelname)
+#                         for modelname in ['might', 'rf', 'knn', 'lr', 'svm'])
