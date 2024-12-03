@@ -1,34 +1,31 @@
 from pathlib import Path
+import pandas as pd
 import matplotlib.pyplot as plt
-
 import numpy as np
 from joblib import Parallel, delayed
-from sklearn.model_selection import StratifiedShuffleSplit
-from treeple import HonestForestClassifier
-from treeple.datasets import (make_trunk_classification,
-                              make_trunk_mixture_classification)
-from treeple.stats import PermutationHonestForestClassifier, build_oob_forest
-from treeple.stats.utils import _mutual_information
-from treeple.tree import MultiViewDecisionTreeClassifier
+
 from sklearn.metrics import roc_auc_score, roc_curve
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import StratifiedKFold, train_test_split
-
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-import os
-# from random import shuffle
 
-import pandas as pd
-import matplotlib.pyplot as plt
-
+from treeple import HonestForestClassifier, ObliqueRandomForestClassifier
+from treeple.stats import PermutationHonestForestClassifier, build_oob_forest
+from treeple.stats.utils import _mutual_information
+from treeple.tree import MultiViewDecisionTreeClassifier
+from treeple.tree import ObliqueDecisionTreeClassifier
 import tree_metrics
+import os
+
 from print_importance import might_importance
 
 n_estimators = 5000
-max_features = 0.3
+max_features = 0.2
+
+# pd.set_option('future.no_silent_downcasting', True)
 
 MODEL_NAMES = {
     "might": {
@@ -38,34 +35,40 @@ MODEL_NAMES = {
         "bootstrap": True,
         "stratify": True,
         "max_samples": 1.6,
-        "max_features": 0.3,
+        "max_features": max_features,
         "tree_estimator": MultiViewDecisionTreeClassifier(),
     },
-    "rf": {
+        "rf": {
         "n_estimators": int(n_estimators / 5),
         "max_features": 0.3,
     },
-    "knn": {
-        # XXX: above, we use sqrt of the total number of samples to allow
-        # scaling wrt the number of samples
-        # "n_neighbors": 5,
+    "HFODT": {
+        "n_estimators": n_estimators,
+        "honest_fraction": 0.5,
+        "n_jobs": 40,
+        "bootstrap": True,
+        "stratify": True,
+        "max_samples": 1.6,
+        "max_features": max_features,
+        "tree_estimator": ObliqueDecisionTreeClassifier(),
+    },
+    "SPORF": {
+        "n_estimators": n_estimators,
+        "n_jobs": 40,
+        "bootstrap": True,
+        # "max_samples": 1.6,
+        "max_features": max_features,
+        # "tree_estimator": ObliqueDecisionTreeClassifier(),
     },
     "svm": {
         "probability": True,
     },
-    "lr": {
-        "max_iter": 1000,
-        "penalty": "l1",
-        "solver": "liblinear",
-    }
 }
+
 might_kwargs = MODEL_NAMES["might"]
+HFODT_kwargs = MODEL_NAMES["HFODT"]
+SPORF_kwargs = MODEL_NAMES["SPORF"]
 
-# filelist = open("filelist.txt", "r").read().split("\n")[:-1]
-
-
-# get the sample list
-# Savannah: Change the file dir if you need, I just put the file in the same dir
 sample_list_file = "AllSamples.MIGHT.Passed.samples.txt"
 sample_list = pd.read_csv(sample_list_file, sep=" ", header=None)
 sample_list.columns = ["library", "sample_id", "cohort"]
@@ -101,8 +104,10 @@ def get_X_y(f, root="", cohort=cohort1, verbose=False):
     target = 'Cancer Status'
     y = df[target]
     # convert the labels to 0 and 1
-    y = y.replace("Healthy", 0)
-    y = y.replace("Cancer", 1)
+    # y = y.replace("Healthy", 0).infer_objects(copy=False)
+    # y = y.replace("Cancer", 1).infer_objects(copy=False)
+    # y = y.replace({"Healthy": 0, "Cancer": 1}).infer_objects(copy=False)
+    y = y.replace({"Healthy": 0, "Cancer": 1}).astype(int)
     # remove the non-feature columns if they exist
     for col in non_features:
         if col in df.columns:
@@ -194,33 +199,32 @@ def run_alog(f1, cohort=cohort1, model_name='might'):
 
     elif model_name == "rf":
         est = RandomForestClassifier(**MODEL_NAMES[model_name], n_jobs=40)
-
-    elif "knn" in model_name:
-        est = KNeighborsClassifier(n_neighbors=int(np.sqrt(X.shape[0]) + 1), )
-
+        
     elif model_name == "svm":
         est = SVC(**MODEL_NAMES[model_name])
 
-    elif model_name == "lr":
-        est = LogisticRegression(**MODEL_NAMES[model_name])
+    elif model_name == "HFODT":
+        est = HonestForestClassifier(**HFODT_kwargs)
+        
+    elif model_name == "SPORF":
+        est = ObliqueRandomForestClassifier(**SPORF_kwargs)
 
     # X_combine = X_combine.fillna(0)
     X_combine = X.fillna(0)
 
-    if model_name == 'might':
-        est, posterior_arr = build_oob_forest(est, X, y_1, verbose=False, )
-    else:
-        est, posterior_arr = stratified_train_ml(est, np.array(X_combine), np.array(y_1))
-    if model_name == 'might':
+    # Training and prediction
+    if model_name in ['might', 'HFODT', 'SPORF']:
+        est, posterior_arr = build_oob_forest(est, X, y_1, verbose=False)
         POS = np.nanmean(posterior_arr, axis=0)
     else:
+        est, posterior_arr = stratified_train_ml(est, np.array(X_combine), np.array(y_1))
         POS = posterior_arr
 
     fpr, tpr, thresholds = roc_curve(y_1, POS[:, -1], pos_label=1, drop_intermediate=False, )
 
     # metrics
     S98 = np.max(tpr[fpr <= 0.02])
-    # tree_metrics.plot_S98(S98, fpr, tpr, model_name)
+    tree_metrics.plot_S98(S98, fpr, tpr, model_name)
     MI = tree_metrics.Calculate_MI(model_name, y_1, POS)
     pAUC = tree_metrics.Calculate_pAUC(model_name, y_1, POS, fpr, tpr)
     hd = tree_metrics.Calculate_hd(model_name, POS)
@@ -229,10 +233,13 @@ def run_alog(f1, cohort=cohort1, model_name='might'):
     # might_importance(model_name, est, X_combine)
 
     # save the model
-    output_dir = "./npz"
-    output_fname = os.path.join(output_dir, f"{model_name}.npz")
-    print(model_name, f1)
-    print(model_name, S98, MI, pAUC, hd)
+    output_folder = "./npz"  
+    # os.makedirs(output_folder, exist_ok=True)  
+
+    output_fname = os.path.join(output_folder, f"{model_name}.npz")
+
+    print(f"Model: {model_name}, File: {f1}, S98: {S98}, MI: {MI}, pAUC: {pAUC}, hd: {hd}")
+    # print(f"Model: {model_name}, File: {f1}, S98: {S98}")
     np.savez_compressed(
         output_fname,
         model_name=model_name,
@@ -243,53 +250,8 @@ def run_alog(f1, cohort=cohort1, model_name='might'):
         pAUC=pAUC,
         hd=hd
     )
-    # return S98
-    return {
-        'fpr': fpr,
-        'tpr': tpr,
-        'thresholds': thresholds,
-        'y': y_1,  
-        'POS': POS  
-    }
+    return S98
 
-def plot_all_roc_curves(models, results, save_path="./figures/roc_curves_comparison.png"):
-    plt.figure(figsize=(8, 6))
-    for model_name, result in results.items():
-        fpr, tpr, pAUC = result['fpr'], result['tpr'], result['pAUC']
-        plt.plot(fpr, tpr, label=f'{model_name} (pAUC={pAUC:.3f})')
-
-    plt.plot([0, 1], [0, 1], 'k--', lw=1)  
-    # plt.xlim([0.0, 0.02])  
-    # plt.ylim([0.0, 1.0])
-    plt.xlabel('False Positive Rate (FPR)', fontsize=22)
-    plt.ylabel('True Positive Rate (TPR)', fontsize=22)
-    plt.title('ROC Curve Comparison', fontsize=22)
-    plt.legend(loc='lower right', fontsize=20)
-    plt.grid(alpha=0.5)
-    
-    plt.savefig(save_path, dpi=300)
-    print(f"ROC curves saved to {save_path}")
-    plt.show()
-
-################# Run this if you want to plot Roc curve ############################
-# Plot ROC curves for all models, run only once. DON'T need 20 times
-results = {}
-for model_name in ['might', 'rf', 'knn', 'lr', 'svm']:
-    result = run_alog(f1='WiseCondorX.Wise-1', cohort=cohort1, model_name=model_name)
-    fpr = result['fpr']
-    tpr = result['tpr']
-    y_true = result['y']
-    y_pred_proba = result['POS']
-    pAUC = tree_metrics.Calculate_pAUC(model_name, y_true, y_pred_proba, fpr, tpr)
-    results[model_name] = {
-        'fpr': fpr,
-        'tpr': tpr,
-        'pAUC': pAUC
-    }
-
-plot_all_roc_curves(['might', 'rf', 'knn', 'lr', 'svm'], results, save_path="./figures/roc_curves_comparison.png")
-#############################################
-
-# for i in range(20):
-#     Parallel(n_jobs=20)(delayed(run_alog)(f1='WiseCondorX.Wise-1', cohort=cohort1, model_name=modelname)
-#                         for modelname in ['might', 'rf', 'knn', 'lr', 'svm'])
+for i in range(10):
+    Parallel(n_jobs=40)(delayed(run_alog)(f1='WiseCondorX.Wise-1', cohort=cohort2, model_name=modelname)
+                        for modelname in ['might', 'rf','svm','HFODT', 'SPORF'])

@@ -8,7 +8,7 @@ import os
 
 def Calculate_MI(model_name, y_true, y_pred_proba):
     # calculate the conditional entropy
-    if model_name == 'might' or model_name == 'HFODT':
+    if model_name == 'might' or model_name == 'HFODT' or model_name == 'SPORF':
         H_YX = np.mean(entropy(y_pred_proba, base=np.exp(1), axis=1))
     else:
         H_YX = np.mean(entropy(y_pred_proba[:, 1:], base=np.exp(1), axis=1))
@@ -21,7 +21,7 @@ def Calculate_MI(model_name, y_true, y_pred_proba):
 
 
 def Calculate_hd(model_name, y_pred_proba) -> float:
-    if model_name == 'might' or model_name == 'HFODT':
+    if model_name == 'might' or model_name == 'HFODT'or model_name == 'SPORF':
         return np.sqrt(
             np.sum((np.sqrt(y_pred_proba[:, 1]) - np.sqrt(y_pred_proba[:, 0])) ** 2)
         ) / np.sqrt(2)
@@ -70,7 +70,7 @@ def Calculate_pAUC(model_name, y_true, y_pred_proba, fpr, tpr, max_fpr=0.1) -> f
     ax.plot(fpr, tpr, label="ROC curve")
 
     # Calculate pAUC at the specific threshold
-    if model_name == 'might' or model_name == 'HFODT':
+    if model_name == 'might' or model_name == 'HFODT' or model_name == 'SPORF':
         pAUC = roc_auc_score(y_true, y_pred_proba[:, 1], max_fpr=max_fpr)
     else:
         pAUC = roc_auc_score(y_true, y_pred_proba[:, 2], max_fpr=max_fpr)
