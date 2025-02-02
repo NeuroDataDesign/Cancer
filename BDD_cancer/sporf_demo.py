@@ -12,6 +12,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 
+from treeple import ObliqueRandomForestClassifier
 from treeple import HonestForestClassifier
 from treeple.stats import PermutationHonestForestClassifier, build_oob_forest
 from treeple.stats.utils import _mutual_information
@@ -51,6 +52,8 @@ MODEL_NAMES = {
     "svm": {
         "probability": True,
     },
+
+
 }
 
 might_kwargs = MODEL_NAMES["might"]
