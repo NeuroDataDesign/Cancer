@@ -12,8 +12,9 @@ BDD_cancer/npz
 
 
 # Origrnal data
-AllSamples.MIGHT.Passed.samples.txt
-WiseCondorX.Wise-1.csv
+# AllSamples.MIGHT.Passed.samples.txt
+# WiseCondorX.Wise-1.csv
+BDD_cancer/data
 
 # Ignore log files
 logs/

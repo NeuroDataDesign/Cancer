@@ -23,7 +23,9 @@ import os
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import sys
 
+sys.path.append('/home/sunyvxuan/projects/Cancer/BDD_cancer/functions') 
 import tree_metrics
 from print_importance import might_importance
 
@@ -66,7 +68,7 @@ might_kwargs = MODEL_NAMES["might"]
 
 # get the sample list
 # Savannah: Change the file dir if you need, I just put the file in the same dir
-sample_list_file = "AllSamples.MIGHT.Passed.samples.txt"
+sample_list_file = "data/AllSamples.MIGHT.Passed.samples.txt"
 sample_list = pd.read_csv(sample_list_file, sep=" ", header=None)
 sample_list.columns = ["library", "sample_id", "cohort"]
 sample_list.head()
@@ -275,7 +277,7 @@ def plot_all_roc_curves(models, results, save_path="./figures/roc_curves_compari
 # Plot ROC curves for all models, run only once. DON'T need 20 times
 results = {}
 for model_name in ['might', 'rf', 'knn', 'lr', 'svm']:
-    result = run_alog(f1='WiseCondorX.Wise-1', cohort=cohort1, model_name=model_name)
+    result = run_alog(f1='data/WiseCondorX.Wise-1', cohort=cohort1, model_name=model_name)
     fpr = result['fpr']
     tpr = result['tpr']
     y_true = result['y']
