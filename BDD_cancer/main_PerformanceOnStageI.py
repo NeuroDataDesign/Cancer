@@ -2,13 +2,11 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-# from sklearn.metrics import roc_auc_score, roc_curve
-# from treeple import HonestForestClassifier
-# from treeple.tree import MultiViewDecisionTreeClassifier
-# from treeple.stats import build_oob_forest
+from models.model_manager import train_model, evaluate_model
 
 pd.set_option('future.no_silent_downcasting', True)
 
+#######################################################################################
 # Data Loading
 
 ## Read csv file
@@ -61,6 +59,16 @@ y_train.to_csv(os.path.join(splitW1_dir, 'y_train_expI.csv'), index=False)
 
 print(f"Training Set: X_train={X_train.shape}, y_train={y_train.shape}")
 print(f"Testing Set: X_test={X_test.shape}, y_test={y_test.shape}")
+
+#######################################################################################
+
+# Train the model
+train_model("might")
+
+# Evaluate the model
+evaluate_model("might")
+
+
 
 
 
