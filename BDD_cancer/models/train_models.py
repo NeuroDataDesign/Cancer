@@ -1,71 +1,75 @@
 import os
-import pandas as pd
 import pickle
-from treeple import HonestForestClassifier
-from treeple import ObliqueRandomForestClassifier
-from treeple.tree import MultiViewDecisionTreeClassifier
-from treeple.tree import ObliqueDecisionTreeClassifier
+import datetime
+from treeple import HonestForestClassifier, ObliqueRandomForestClassifier
+from treeple.tree import MultiViewDecisionTreeClassifier, ObliqueDecisionTreeClassifier
 
-# Make sure the models directory exists
-os.makedirs("models", exist_ok=True)
-
-##########################################################################
-# Load the data
-splitW1_dir = './data/splitedW1'
-X_train = pd.read_csv(os.path.join(splitW1_dir, 'X_train_expI.csv'))
-y_train = pd.read_csv(os.path.join(splitW1_dir, 'y_train_expI.csv')).values.ravel()  # 确保 y_train 变成 1D 数组
-
-
-##########################################################################
-# Define the MIGHT model hyperparameters
-MODELS = {
-    "might": HonestForestClassifier(
-            n_estimators=5000,
-            honest_fraction=0.5,
-            n_jobs=40,
-            bootstrap=True,
-            stratify=True,
-            max_samples=1.0,
-            max_features=0.3,
-            tree_estimator=MultiViewDecisionTreeClassifier(),
-        ),
-    "SPO-MIGHT": HonestForestClassifier(
-            n_estimators=5000,
-            honest_fraction=0.5,
-            n_jobs=40,
-            bootstrap=True,
-            stratify=True,
-            max_samples=1.0,
-            max_features=0.3,
-            tree_estimator=ObliqueDecisionTreeClassifier(),
-        ),
-    "SPORF": ObliqueRandomForestClassifier(
-            n_estimators=5000,
-            n_jobs=40,
-            bootstrap=True,
-            max_features=0.3,
-        ),
-        
-}
-
+# Make sure the models/trained directory exists
+os.makedirs("models/trained", exist_ok=True)
 model_dir = "models/trained"
 
-def train_and_save_model(model_name):
-    """Train the specified model and save it to disk."""
-    if model_name not in MODELS:
+timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+##########################################################################
+# Define Model Configurations
+MODEL_CONFIGS = {
+    "might": {
+        "class": HonestForestClassifier,
+        "params": {
+            "n_estimators": 5000,
+            "honest_fraction": 0.5,
+            "n_jobs": 40,
+            "bootstrap": True,
+            "stratify": True,
+            "max_samples": 1.0,
+            "max_features": 0.3,
+            "tree_estimator": MultiViewDecisionTreeClassifier(),
+        }
+    },
+    "SPO-MIGHT": {
+        "class": HonestForestClassifier,
+        "params": {
+            "n_estimators": 5000,
+            "honest_fraction": 0.5,
+            "n_jobs": 40,
+            "bootstrap": True,
+            "stratify": True,
+            "max_samples": 1.0,
+            "max_features": 0.3,
+            "tree_estimator": ObliqueDecisionTreeClassifier(),
+        }
+    },
+    "SPORF": {
+        "class": ObliqueRandomForestClassifier,
+        "params": {
+            "n_estimators": 5000,
+            "n_jobs": 40,
+            "bootstrap": True,
+            "max_features": 0.3,
+        }
+    }
+}
+
+##########################################################################
+# Train and Save Model
+def train_and_save_model(model_name, X_train, y_train):
+    """Train and save a model"""
+    if model_name not in MODEL_CONFIGS:
         raise ValueError(f"Unknown model: {model_name}")
     
-    print(f"Training {model_name} Model...")
-    model = MODELS[model_name]
+    print(f"🔹 Training {model_name} Model...")
+    
+    # Instantiate Model
+    model_class = MODEL_CONFIGS[model_name]["class"]
+    model_params = MODEL_CONFIGS[model_name]["params"]
+    model = model_class(**model_params)
+
+    # Fit Model
     model.fit(X_train, y_train)
 
-    model_path = os.path.join(model_dir, f"{model_name}_model.pkl")
+    # Save Model
+    model_path = os.path.join(model_dir, f"{model_name}_{timestamp}.pkl")
     with open(model_path, "wb") as f:
         pickle.dump(model, f)
     
-    print(f"{model_name} Model has been trained, save to {model_path}")
-
-if __name__ == "__main__":
-    # Train and save all models
-    for model_name in MODELS.keys():
-        train_and_save_model(model_name)
+    print(f"✅ {model_name} Model has been trained and saved to {model_path}")
