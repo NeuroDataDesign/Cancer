@@ -42,11 +42,25 @@ for col in non_feature_cols:
     if col in data.columns:
         data = data.drop(columns=[col])
         
+# Select Stage I samples for testing
+stage_I_samples = data[data['Stage'] == 'I']
+
+# Select Normal samples and randomly choose 200 for testing
+normal_samples = data[data['Stage'] == 'Normal']
+normal_test_samples = normal_samples.sample(n=200, random_state=42)  # Select 200 Normal samples
+normal_train_samples = normal_samples.drop(normal_test_samples.index)  # Remaining Normal samples
+
+# Combine Stage I samples + 200 Normal samples as Test Set
+test_samples = pd.concat([stage_I_samples, normal_test_samples])
+
+# Remaining data (excluding selected test samples) is Training Set
+train_samples = data.drop(test_samples.index)
+        
 ## Data split
-X_test = data[data['Stage'] == 'I'].drop(columns=['Cancer Status', 'Stage']) 
-y_test = data[data['Stage'] == 'I']['Cancer Status'] 
-X_train = data[data['Stage'] != 'I'].drop(columns=['Cancer Status', 'Stage']) 
-y_train = data[data['Stage'] != 'I']['Cancer Status']
+X_test = test_samples.drop(columns=['Cancer Status', 'Stage', 'Sample'])
+y_test = test_samples['Cancer Status']
+X_train = train_samples.drop(columns=['Cancer Status', 'Stage', 'Sample'])
+y_train = train_samples['Cancer Status']
 
 # Save data
 splitW1_dir = './data/splitedW1'
@@ -60,7 +74,7 @@ y_train.to_csv(os.path.join(splitW1_dir, 'y_train_expI.csv'), index=False)
 print(f"Training Set: X_train={X_train.shape}, y_train={y_train.shape}")
 print(f"Testing Set: X_test={X_test.shape}, y_test={y_test.shape}")
 
-#######################################################################################
+######################################################################################
 
 # Train the model
 train_model("might")

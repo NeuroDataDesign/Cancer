@@ -15,6 +15,7 @@ BDD_cancer/npz
 # AllSamples.MIGHT.Passed.samples.txt
 # WiseCondorX.Wise-1.csv
 BDD_cancer/data
+BDD_cancer/models/trained
 
 # Ignore log files
 logs/

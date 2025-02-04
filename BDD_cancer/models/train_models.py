@@ -41,13 +41,9 @@ MODELS = {
         ),
     "SPORF": ObliqueRandomForestClassifier(
             n_estimators=5000,
-            honest_fraction=0.5,
             n_jobs=40,
             bootstrap=True,
-            stratify=True,
-            max_samples=1.0,
             max_features=0.3,
-            tree_estimator=ObliqueDecisionTreeClassifier(),
         ),
         
 }
