@@ -1,22 +1,27 @@
 import os
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+import datetime
 from joblib import Parallel, delayed
 from sklearn.model_selection import KFold
-from models.model_manager import train_model, evaluate_model
+from models.train_models import train_model
+from models.test_models import test_model
 
 pd.set_option('future.no_silent_downcasting', True)
 
 #######################################################################################
-# Load Data
+# **1️⃣ Load Data**
 
-## Read Data
+# **Read CSV file**
 data = pd.read_csv("./data/WiseCondorX.Wise-1.csv")
 
-## Work with Data
+# **Process Cancer Status**
 data['Cancer Status'] = data['Cancer Status'].replace({"Healthy": 0, "Cancer": 1}).astype(int)
+
+# **Handle missing values**
 data = data.dropna(axis=1, how='all').fillna(0)
+
+# **Normalize Stage**
 if 'Stage' in data.columns:
     stage_mapping = {
         'IA': 'I', 'IA1': 'I', 'IA2': 'I', 'IA3': 'I', 'IB': 'I', 'IC': 'I',
@@ -31,26 +36,25 @@ if 'Stage' in data.columns:
     }
     data['Stage'] = data['Stage'].astype(str).map(stage_mapping).fillna('Unknown')
 
+# **Remove non-feature columns**
 non_feature_cols = ['Run', 'Library', 'Tumor type', 'Library volume (uL)',
                     'Library Volume', 'UIDs Used', 'Experiment', 'P7', 'P7 Primer', 'MAF']
-for col in non_feature_cols:
-    if col in data.columns:
-        data = data.drop(columns=[col])
+data = data.drop(columns=[col for col in non_feature_cols if col in data.columns])
 
 #######################################################################################
-# 5-Fold Cross Validation
+# **2️⃣ 5-Fold Cross Validation**
 kf = KFold(n_splits=5, shuffle=True, random_state=42)
 
 stage_I_samples = data[data['Stage'] == 'I']
 normal_samples = data[data['Stage'] == 'Normal']
 
 def run_fold(train_idx, test_idx, fold):
-    """ Run a single fold of 5-fold cross validation """
+    """ Train and test models in parallel within a single fold """
     print(f"\n Running Fold {fold+1}/5 ...")
 
-    # Divide data into train and test
-    normal_test = normal_samples.iloc[test_idx]  # 20% Normal
-    test_samples = pd.concat([stage_I_samples, normal_test])  # Test = 20% Stage I + 20% Normal
+    # **Split train & test data**
+    normal_test = normal_samples.iloc[test_idx]  # Select 20% Normal samples
+    test_samples = pd.concat([stage_I_samples, normal_test])  # Test = Stage I + 20% Normal
     train_samples = pd.concat([data, test_samples]).drop_duplicates(keep=False)  # Train = All - Test
 
     X_train, y_train = train_samples.drop(columns=['Cancer Status', 'Stage', 'Sample']), train_samples['Cancer Status'].values.ravel()
@@ -58,35 +62,34 @@ def run_fold(train_idx, test_idx, fold):
 
     print(f"Fold {fold+1} -> Train: {X_train.shape}, Test: {X_test.shape}")
 
-    # Parallel training
-    Parallel(n_jobs=3)(
-        delayed(train_model)(model, X_train, y_train) for model in ["might"]
-    )
+    # **Generate a single timestamp for this fold**
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    # Parallel evaluation
+    # **Train models in parallel**
+    trained_models = Parallel(n_jobs=3)(
+        delayed(train_model)(model, X_train, y_train, timestamp) 
+        for model in ["might", "SPO-MIGHT", "SPORF"]
+    )
+    
+    # **Map model names to trained model objects**
+    trained_models_dict = {model_name: model for model_name, model in zip(["might", "SPO-MIGHT", "SPORF"], trained_models)}
+
+    # **Test models in parallel**
     fold_results = Parallel(n_jobs=3)(
-        delayed(evaluate_model)(model, X_test, y_test) for model in ["might"]
+        delayed(test_model)(trained_models_dict[model], model, X_test, y_test, timestamp)
+        for model in trained_models_dict
     )
 
     return fold_results
 
-# Run 5-Fold Cross Validation
-results = Parallel(n_jobs=5)(
-    delayed(run_fold)(train_idx, test_idx, fold) for fold, (train_idx, test_idx) in enumerate(kf.split(normal_samples))
-)
+# **3️⃣ Run Each Fold Sequentially (Train and Test are Parallel)**
+results = []
+for fold, (train_idx, test_idx) in enumerate(kf.split(normal_samples)):
+    fold_result = run_fold(train_idx, test_idx, fold)
+    results.append(fold_result)  # Store results for each fold
 
 #######################################################################################
-# Display Results
+# **4️⃣ Print Final Results**
 print("\n Final Results Across 5 Folds:")
 for fold_id, fold_res in enumerate(results):
     print(f"Fold {fold_id+1}: {fold_res}")
-
-
-# # For Single Fold
-# train_idx, test_idx = next(iter(kf.split(normal_samples)))
-
-# # 
-# single_fold_results = run_fold(train_idx, test_idx, fold=0)
-
-# print("\nResults for Single Fold:")
-# print(single_fold_results)
