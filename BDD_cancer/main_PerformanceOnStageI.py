@@ -60,12 +60,12 @@ def run_fold(train_idx, test_idx, fold):
 
     # Parallel training
     Parallel(n_jobs=3)(
-        delayed(train_model)(model, X_train, y_train) for model in ["might", "SPO-MIGHT", "SPORF"]
+        delayed(train_model)(model, X_train, y_train) for model in ["might"]
     )
 
     # Parallel evaluation
     fold_results = Parallel(n_jobs=3)(
-        delayed(evaluate_model)(model, X_test, y_test) for model in ["might", "SPO-MIGHT", "SPORF"]
+        delayed(evaluate_model)(model, X_test, y_test) for model in ["might"]
     )
 
     return fold_results

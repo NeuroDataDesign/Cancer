@@ -4,6 +4,7 @@ __pycache__/
 
 # Ignore all .npz files
 *.npz
+*.pkl
 
 # Ignore all output files
 BDD/Outcome

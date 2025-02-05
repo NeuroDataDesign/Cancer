@@ -4,11 +4,10 @@ import datetime
 from treeple import HonestForestClassifier, ObliqueRandomForestClassifier
 from treeple.tree import MultiViewDecisionTreeClassifier, ObliqueDecisionTreeClassifier
 
-# Make sure the models/trained directory exists
+# Make sure `models/trained` directory exists
 os.makedirs("models/trained", exist_ok=True)
 model_dir = "models/trained"
-
-timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+latest_model_file = os.path.join(model_dir, "latest_model.txt")
 
 ##########################################################################
 # Define Model Configurations
@@ -58,18 +57,25 @@ def train_and_save_model(model_name, X_train, y_train):
         raise ValueError(f"Unknown model: {model_name}")
     
     print(f"🔹 Training {model_name} Model...")
-    
-    # Instantiate Model
+
+    # Create timestamp
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Load model class and parameters
     model_class = MODEL_CONFIGS[model_name]["class"]
     model_params = MODEL_CONFIGS[model_name]["params"]
     model = model_class(**model_params)
 
-    # Fit Model
+    # Fit model
     model.fit(X_train, y_train)
 
-    # Save Model
+    # Save model
     model_path = os.path.join(model_dir, f"{model_name}_{timestamp}.pkl")
     with open(model_path, "wb") as f:
         pickle.dump(model, f)
     
     print(f"✅ {model_name} Model has been trained and saved to {model_path}")
+
+    # Update latest_model.txt
+    with open(latest_model_file, "a") as f:
+        f.write(f"{model_name}: {model_path}\n")
