@@ -2,9 +2,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score, roc_curve
-from treeple.stats import build_oob_forest
 
-# **Ensure `figures` directory exists**
+# Ensure figures directory exists
 fig_dir = "./figures"
 os.makedirs(fig_dir, exist_ok=True)
 
@@ -12,14 +11,9 @@ def test_model(model, model_name, X_test, y_test, timestamp):
     """ Test a trained model and plot the ROC curve with S@98 annotation. """
     print(f"Testing {model_name} model...")
 
-    # **Use OOB predictions for MIGHT, SPO-MIGHT, SPORF**
-    if model_name in ["might", "SPO-MIGHT", "SPORF"]:
-        print("Using OOB predictions...")
-        _, posterior_arr = build_oob_forest(model, X_test, y_test, verbose=False)
-        posterior_mean = np.nanmean(posterior_arr, axis=0)  # (n_samples, n_classes)
-    else:
-        print("Using direct prediction...")
-        posterior_mean = model.predict_proba(X_test)  # (n_samples, 2)
+    # **Use direct prediction**
+    print("Using direct prediction...")
+    posterior_mean = model.predict_proba(X_test)  # (n_samples, 2)
 
     # **Ensure posterior_mean is 1D**
     posterior_final = posterior_mean[:, 1] if posterior_mean.ndim == 2 else posterior_mean.ravel()

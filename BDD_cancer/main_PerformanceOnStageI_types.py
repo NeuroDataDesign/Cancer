@@ -10,7 +10,7 @@ from models.test_models import test_model
 pd.set_option('future.no_silent_downcasting', True)
 
 #######################################################################################
-# **1️⃣ Load Data**
+#  Load Data
 
 # **Read CSV file**
 data = pd.read_csv("./data/WiseCondorX.Wise-1.csv")
@@ -37,30 +37,40 @@ if 'Stage' in data.columns:
     data['Stage'] = data['Stage'].astype(str).map(stage_mapping).fillna('Unknown')
 
 # **Remove non-feature columns**
-non_feature_cols = ['Run', 'Library', 'Tumor type', 'Library volume (uL)',
-                    'Library Volume', 'UIDs Used', 'Experiment', 'P7', 'P7 Primer', 'MAF']
+non_feature_cols = ['Run', 'Library', 'Library volume (uL)', 'Library Volume',
+                    'UIDs Used', 'Experiment', 'P7', 'P7 Primer', 'MAF']
 data = data.drop(columns=[col for col in non_feature_cols if col in data.columns])
 
 #######################################################################################
-# **2️⃣ 5-Fold Cross Validation**
+#  Extract Stage I Samples and Group by Tumor Type
+stage_I_samples = data[data['Stage'] == 'I']
+tumor_types = stage_I_samples['Tumor type'].unique()
+
+# **Store results for S@98 for each Tumor Type**
+tumor_type_results = {}
+
+#######################################################################################
+# Perform 5-Fold Cross Validation for Each Tumor Type
 kf = KFold(n_splits=5, shuffle=True, random_state=42)
 
-stage_I_samples = data[data['Stage'] == 'I']
 normal_samples = data[data['Stage'] == 'Normal']
 
-def run_fold(train_idx, test_idx, fold):
-    """ Train and test models in parallel within a single fold """
-    print(f"\n Running Fold {fold+1}/5 ...")
+def run_fold(train_idx, test_idx, fold, tumor_type):
+    """ Train and test models in parallel within a single fold for a specific Tumor Type """
+    print(f"\n Running Fold {fold+1}/5 for Tumor Type: {tumor_type}...")
 
+    # **Select samples for the specific tumor type**
+    stage_I_tumor_samples = stage_I_samples[stage_I_samples['Tumor type'] == tumor_type]
+    
     # **Split train & test data**
     normal_test = normal_samples.iloc[test_idx]  # Select 20% Normal samples
-    test_samples = pd.concat([stage_I_samples, normal_test])  # Test = Stage I + 20% Normal
+    test_samples = pd.concat([stage_I_tumor_samples, normal_test])  # Test = Specific Tumor Type + 20% Normal
     train_samples = pd.concat([data, test_samples]).drop_duplicates(keep=False)  # Train = All - Test
 
-    X_train, y_train = train_samples.drop(columns=['Cancer Status', 'Stage', 'Sample']), train_samples['Cancer Status'].values.ravel()
-    X_test, y_test = test_samples.drop(columns=['Cancer Status', 'Stage', 'Sample']), test_samples['Cancer Status'].values.ravel()
+    X_train, y_train = train_samples.drop(columns=['Cancer Status', 'Stage', 'Sample', 'Tumor type']), train_samples['Cancer Status'].values.ravel()
+    X_test, y_test = test_samples.drop(columns=['Cancer Status', 'Stage', 'Sample', 'Tumor type']), test_samples['Cancer Status'].values.ravel()
 
-    print(f"Fold {fold+1} -> Train: {X_train.shape}, Test: {X_test.shape}")
+    print(f"Tumor Type {tumor_type} - Fold {fold+1} -> Train: {X_train.shape}, Test: {X_test.shape}")
 
     # **Generate a single timestamp for this fold**
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -74,22 +84,29 @@ def run_fold(train_idx, test_idx, fold):
     # **Map model names to trained model objects**
     trained_models_dict = {model_name: model for model_name, model in zip(["might", "SPO-MIGHT", "SPORF"], trained_models)}
 
-
     # Parallel test models
     fold_results = Parallel(n_jobs=3)(
         delayed(test_model)(trained_models_dict[model], model, X_test, y_test, timestamp)
         for model in trained_models_dict
     )
+
     return fold_results
 
-# **3️⃣ Run Each Fold Sequentially (Train and Test are Parallel)**
-results = []
-for fold, (train_idx, test_idx) in enumerate(kf.split(normal_samples)):
-    fold_result = run_fold(train_idx, test_idx, fold)
-    results.append(fold_result)  # Store results for each fold
+# **Loop through each Tumor Type**
+for tumor_type in tumor_types:
+    print(f"\n### Processing Tumor Type: {tumor_type} ###")
+    
+    tumor_results = []
+    for fold, (train_idx, test_idx) in enumerate(kf.split(normal_samples)):
+        fold_result = run_fold(train_idx, test_idx, fold, tumor_type)
+        tumor_results.append(fold_result)  # Store results for each fold
+
+    tumor_type_results[tumor_type] = tumor_results  # Store results per tumor type
 
 #######################################################################################
-# **4️⃣ Print Final Results**
-print("\n Final Results Across 5 Folds:")
-for fold_id, fold_res in enumerate(results):
-    print(f"Fold {fold_id+1}: {fold_res}")
+#  Print Final S@98 Results for Each Tumor Type
+print("\n Final S@98 Results Across Tumor Types:")
+for tumor_type, fold_res in tumor_type_results.items():
+    print(f"Tumor Type: {tumor_type}")
+    for fold_id, fold_s98 in enumerate(fold_res):
+        print(f"  Fold {fold_id+1}: {fold_s98}")
