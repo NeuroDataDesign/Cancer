@@ -17,10 +17,10 @@ from treeple.stats import PermutationHonestForestClassifier, build_oob_forest
 from treeple.stats.utils import _mutual_information
 from treeple.tree import MultiViewDecisionTreeClassifier
 from treeple.tree import ObliqueDecisionTreeClassifier
-import tree_metrics
+import functions.tree_metrics
 import os
 
-from print_importance import might_importance
+from functions.print_importance import might_importance
 
 n_estimators = 5000
 max_features = 0.2
@@ -42,7 +42,7 @@ MODEL_NAMES = {
         "n_estimators": int(n_estimators / 5),
         "max_features": 0.3,
     },
-    "HFODT": {
+    "SPO-MIGHT": {
         "n_estimators": n_estimators,
         "honest_fraction": 0.5,
         "n_jobs": 40,
@@ -224,10 +224,10 @@ def run_alog(f1, cohort=cohort1, model_name='might'):
 
     # metrics
     S98 = np.max(tpr[fpr <= 0.02])
-    tree_metrics.plot_S98(S98, fpr, tpr, model_name)
-    MI = tree_metrics.Calculate_MI(model_name, y_1, POS)
-    pAUC = tree_metrics.Calculate_pAUC(model_name, y_1, POS, fpr, tpr)
-    hd = tree_metrics.Calculate_hd(model_name, POS)
+    functions.tree_metrics.plot_S98(S98, fpr, tpr, model_name)
+    MI = functions.tree_metrics.Calculate_MI(model_name, y_1, POS)
+    pAUC = functions.tree_metrics.Calculate_pAUC(model_name, y_1, POS, fpr, tpr)
+    hd = functions.tree_metrics.Calculate_hd(model_name, POS)
 
     # importance
     # might_importance(model_name, est, X_combine)
@@ -252,6 +252,6 @@ def run_alog(f1, cohort=cohort1, model_name='might'):
     )
     return S98
 
-for i in range(10):
-    Parallel(n_jobs=40)(delayed(run_alog)(f1='WiseCondorX.Wise-1', cohort=cohort2, model_name=modelname)
+# for i in range(10):
+Parallel(n_jobs=40)(delayed(run_alog)(f1='WiseCondorX.Wise-1', cohort=cohort2, model_name=modelname)
                         for modelname in ['might', 'rf','svm','HFODT', 'SPORF'])

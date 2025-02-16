@@ -6,6 +6,8 @@ from joblib import Parallel, delayed
 from sklearn.model_selection import KFold
 from models.train_models import train_model
 from models.test_models import test_model
+import gc
+from joblib.externals.loky import get_reusable_executor
 
 pd.set_option('future.no_silent_downcasting', True)
 
@@ -43,9 +45,11 @@ data = data.drop(columns=[col for col in non_feature_cols if col in data.columns
 
 #######################################################################################
 # **2️⃣ 5-Fold Cross Validation**
-kf = KFold(n_splits=5, shuffle=True, random_state=42)
+kf = KFold(n_splits=5, shuffle=True, random_state=210)
 
 stage_I_samples = data[data['Stage'] == 'I']
+stage_I_test = stage_I_samples.sample(n=100, random_state=425)  
+# stage_I_train = stage_I_samples.drop(stage_I_test.index)
 normal_samples = data[data['Stage'] == 'Normal']
 
 def run_fold(train_idx, test_idx, fold):
@@ -54,7 +58,7 @@ def run_fold(train_idx, test_idx, fold):
 
     # **Split train & test data**
     normal_test = normal_samples.iloc[test_idx]  # Select 20% Normal samples
-    test_samples = pd.concat([stage_I_samples, normal_test])  # Test = Stage I + 20% Normal
+    test_samples = pd.concat([stage_I_test, normal_test])  # Test = Stage I + 20% Normal
     train_samples = pd.concat([data, test_samples]).drop_duplicates(keep=False)  # Train = All - Test
 
     X_train, y_train = train_samples.drop(columns=['Cancer Status', 'Stage', 'Sample']), train_samples['Cancer Status'].values.ravel()
@@ -71,11 +75,17 @@ def run_fold(train_idx, test_idx, fold):
         for model in ["might", "SPO-MIGHT", "SPORF"]
     )
     
-    # **Map model names to trained model objects**
+    print("Clearing joblib processes and garbage collection...")
+    get_reusable_executor().shutdown(wait=True)
+    gc.collect()
+    print("Processes cleared. Proceeding...")
+    
+    # Map model names to trained model objects
+    print("Creating trained_models_dict...")
     trained_models_dict = {model_name: model for model_name, model in zip(["might", "SPO-MIGHT", "SPORF"], trained_models)}
-
-
-    # Parallel test models
+    print("trained_models_dict created successfully.")
+    
+        # Parallel test models
     fold_results = Parallel(n_jobs=3)(
         delayed(test_model)(trained_models_dict[model], model, X_test, y_test, timestamp)
         for model in trained_models_dict
