@@ -11,7 +11,7 @@ from joblib.externals.loky import get_reusable_executor
 
 pd.set_option('future.no_silent_downcasting', True)
 
-random_state = 507
+random_state = 42
 
 
 # Load Data and Process Cancer Status
@@ -45,7 +45,7 @@ data = data.drop(columns=[col for col in non_feature_cols if col in data.columns
 cancer_types_test = {'Stomach', 'Pancreas', 'Esophagus', 'Lung', 'Liver', 'Ovary'}
 test_set = data[(data['Stage'] == 'I') & (data['Tumor type'].isin(cancer_types_test))]
 normal_samples = data[data['Stage'] == 'Normal']
-normal_test_samples = normal_samples.sample(n=100, random_state=random_state)
+normal_test_samples = normal_samples.sample(n=256, random_state=random_state)
 test_set = pd.concat([test_set, normal_test_samples])
 train_set = data.drop(test_set.index)
 # print(test_set['Tumor type'].value_counts())

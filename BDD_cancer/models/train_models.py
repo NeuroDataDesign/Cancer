@@ -5,21 +5,22 @@ from treeple.tree import MultiViewDecisionTreeClassifier, ObliqueDecisionTreeCla
 # **Define Model Configurations**
 
 # Hyperparameters
-n_estimators = 6000
+n_estimators = 50000
 max_features = 'sqrt'
 n_jobs = 40
-
+honest_fraction = 0.367
+max_samples = 1.6
 
 MODEL_CONFIGS = {
     "MIGHT": {
         "class": HonestForestClassifier,
         "params": {
             "n_estimators": n_estimators,  
-            "honest_fraction": 0.5,
+            "honest_fraction": honest_fraction,
             "n_jobs": n_jobs,  
             "bootstrap": True,
             "stratify": True,
-            "max_samples": 1.0,
+            "max_samples": max_samples,
             "max_features": max_features,
             "tree_estimator": MultiViewDecisionTreeClassifier(),
         }
@@ -28,11 +29,11 @@ MODEL_CONFIGS = {
         "class": HonestForestClassifier,
         "params": {
             "n_estimators": n_estimators,
-            "honest_fraction": 0.5,
+            "honest_fraction": honest_fraction,
             "n_jobs": n_jobs,
             "bootstrap": True,
             "stratify": True,
-            "max_samples": 1.0,
+            "max_samples": max_samples,
             "max_features": max_features,
             "tree_estimator": ObliqueDecisionTreeClassifier(),
         }
